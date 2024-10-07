@@ -20,7 +20,7 @@ void print_error(int line_number) {
     cerr << "ERROR " << line_number << '\n';
 }
 
-pair<string, int> medal_data(string line) {
+pair<string, int> medal_data(string& line) {
     string country = line;
     int medal = (int)(country.back() - '0');
 
@@ -36,7 +36,7 @@ pair<string, int> medal_data(string line) {
     return make_pair(country, medal);
 }
 
-bool is_country_name_valid(string name) {
+bool is_country_name_valid(string& name) {
     bool valid = true;
     int letters = 0;
 
@@ -51,12 +51,12 @@ bool is_country_name_valid(string name) {
     return valid;
 }
 
-bool is_medal_valid(pair <string, int> medal) {
+bool is_medal_valid(pair <string, int>& medal) {
     if (medal.second == -1 || is_country_name_valid(medal.first) == false) return false;
     else return true;
 }
 
-void add_medal(string line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
+void add_medal(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
     pair <string, int> para = medal_data(line);
 
     if (is_medal_valid(para) == false) {
@@ -69,7 +69,7 @@ void add_medal(string line, int line_number, array <map<string, int>, 3>& Medals
     Medals[para.second - 1][para.first]++;
 }
 
-void remove_medal(string line, int line_number, array <map<string, int>, 3> Medals, unordered_set<string> Countries) {
+void remove_medal(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
     pair <string, int> para = medal_data(line);
 
     if (is_medal_valid(para) == false) {
@@ -80,7 +80,7 @@ void remove_medal(string line, int line_number, array <map<string, int>, 3> Meda
     Medals[para.second - 1][para.first]--;
 }
 
-vector<pair<int, string>> Rating(array <int, 3> Weights, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
+vector<pair<int, string>> Rating(array <int, 3>& Weights, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
 
     vector<pair<int, string>> Rating;
 
@@ -101,7 +101,7 @@ vector<pair<int, string>> Rating(array <int, 3> Weights, array <map<string, int>
     return Rating;
 }
 
-void print_rating(string line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
+void print_rating(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
 
     array <int, 3> Weights;
 
