@@ -7,6 +7,7 @@
 #include <unordered_set>
 #include <vector>
 #include <algorithm>
+#include <regex>
 using namespace std;
 
 #define AMOUNT_OF_MEDALS 3
@@ -130,21 +131,26 @@ int main() {
     array <map<string, int>, 3> Medals;
     unordered_set <string> Countries;
 
+    regex Rating("=[0-9]+[:space:][0-9]+[:space:]+[0-9]+");
+    regex Add("[A-Z][A-Za-z[:space:]]*[0-9]");
+    regex Minus("-[A-Z][A-Za-z[:space:]]*[0-9]");
+
     while (getline(cin, line)) {
 
-        if (line.empty()) 
-            print_error(line_number);
-        else if (line.front() == '=') {
+        if (regex_match(line, Rating)) {
             line.erase(0, 1);
             print_rating(line, line_number, Medals, Countries);
         }   
-        else if (line.front() == '-') {
+        else if (regex_match(line, Minus)) {
             line.erase(0, 1);
             remove_medal(line, line_number, Medals, Countries);
         }
-        else {
+        else if (regex_match(line, Add)){
             add_medal(line, line_number, Medals, Countries);
-        }     
+        }
+        else {
+            print_error(line_number);
+        }  
 
         line_number++;
     }
