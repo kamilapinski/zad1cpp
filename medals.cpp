@@ -10,21 +10,13 @@
 #include <regex>
 using namespace std;
 
-using id = int32_t;
+using type = int32_t;
 using integer = int64_t;
 
-#define AMOUNT_OF_MEDALS 3
+#define AMOUNT_OF_TYPES 3
 
 #define dprint(x) cout << "D: " << x << "\n"
 
-// int używam dla 
-//      medali id
-//      numeru linii integer
-//      liczby liter w stringu (trza zmienić)
-//      ilości medali integer
-//      wagi medali integer
-
-// SPRAWDZANIE NUMERU MEDALU
 
 bool cmp(pair<string, integer> p1, pair<string, integer> p2) {
     if (p1.second == p2.second) {
@@ -35,15 +27,21 @@ bool cmp(pair<string, integer> p1, pair<string, integer> p2) {
     else return p1.second > p2.second;
 }
 
-void print_error(int line_number) {
+void print_error(integer line_number) {
     cerr << "ERROR " << line_number << '\n';
 }
 
-pair<string, id> medal_data(string& line) {
-    string country = line;
-    id medal = (id)(country.back() - '0');
+// poprawić, żeby było łatwo zmieniać
+bool is_medal_type_correct(const string& line) {
+    regex Type("[A-Za-z[:space:]]*[:space:][0-3]");
+    return regex_match(line, Type);
+}
 
-    if (medal < 0 || medal > AMOUNT_OF_MEDALS) medal = -1;
+pair<string, type> medal_data(const string& line) {
+    string country = line;
+    type medal = (type)(country.back() - '0');
+
+    if (medal < 0 || medal > AMOUNT_OF_TYPES) medal = -1;
 
     country.pop_back();
 
@@ -56,9 +54,9 @@ pair<string, id> medal_data(string& line) {
 }
 
 // sprawdzona i poprawna funkcja
-void update_medals(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries, integer amount) {
+void update_medals(const string& line, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries, integer amount) {
     // w tym momencie dzięki regex wiemy już, że line jest poprawny
-    pair <string, id> medal = medal_data(line);
+    pair <string, type> medal = medal_data(line);
 
     if (amount >= 0) { 
         Countries.insert(medal.first);
@@ -67,7 +65,7 @@ void update_medals(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>&
     Medals[medal.second - 1][medal.first]++;
 }
 
-vector<pair<string, integer>> Rating(array <integer, AMOUNT_OF_MEDALS>& Weights, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries) {
+vector<pair<string, integer>> get_rating(array <integer, AMOUNT_OF_TYPES>& Weights, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
 
     vector<pair<string, integer>> rating;
 
@@ -76,7 +74,7 @@ vector<pair<string, integer>> Rating(array <integer, AMOUNT_OF_MEDALS>& Weights,
 
         position.first = country;
         position.second = 0;
-        for (id i = 0; i < AMOUNT_OF_MEDALS; i++) {
+        for (type i = 0; i < AMOUNT_OF_TYPES; i++) {
             position.second += Weights[i] * Medals[i][country];
         }
 
@@ -88,17 +86,17 @@ vector<pair<string, integer>> Rating(array <integer, AMOUNT_OF_MEDALS>& Weights,
     return rating;
 }
 
-void print_rating(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries) {
+void print_rating(const string& line, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
     // teraz też już wiemy, że line jest poprawny dzięki regexowi
-    array <integer, AMOUNT_OF_MEDALS> Weights;
+    array <integer, AMOUNT_OF_TYPES> Weights;
 
     stringstream ss = stringstream(line);
 
-    for (id i = 0; i < AMOUNT_OF_MEDALS; i++) {
+    for (type i = 0; i < AMOUNT_OF_TYPES; i++) {
         ss >> Weights[i];
     }
     
-    vector<pair<string, integer>> rating = Rating(Weights, Medals, Countries);
+    vector<pair<string, integer>> rating = get_rating(Weights, Medals, Countries);
 
     integer n = 0, last_score = -1;
     for (pair<string, integer> position : rating) {
@@ -114,7 +112,7 @@ int main() {
     string line;
     integer line_number = 1;
 
-    array <map<string, integer>, AMOUNT_OF_MEDALS> Medals;
+    array <map<string, integer>, AMOUNT_OF_TYPES> Medals;
     unordered_set <string> Countries;
 
     regex Rating("=[0-9]+[[:space:]][0-9]+[[:space:]]+[0-9]+");
@@ -123,7 +121,10 @@ int main() {
 
     while (getline(cin, line)) {
 
-        if (regex_match(line, Rating)) {
+        if (!is_medal_type_correct(line)) {
+            print_error(line_number);
+        }
+        else if (regex_match(line, Rating)) {
             line.erase(0, 1);
             print_rating(line, Medals, Countries);
         }   
