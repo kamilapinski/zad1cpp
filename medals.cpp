@@ -13,7 +13,12 @@ using namespace std;
 #define AMOUNT_OF_MEDALS 3
 
 bool cmp(pair<int, string> p1, pair<int, string> p2) {
-    return p1.first > p2.first;
+    if (p1.first == p2.first) {
+        if (p1.second.compare(p2.second) < 0)
+            return true;
+        else return false;
+    }
+    else return p1.first > p2.first;
 }
 
 void print_error(int line_number) {
@@ -115,6 +120,7 @@ void print_rating(string& line, int line_number, array <map<string, int>, 3>& Me
         for (pair<int, string> position : rating) {
             if (last_score != position.first) n++;
             cout << n << " " << position.second << "\n";
+            last_score = position.first;
         }
     }
     else {
@@ -131,7 +137,7 @@ int main() {
     array <map<string, int>, 3> Medals;
     unordered_set <string> Countries;
 
-    regex Rating("=[0-9]+[:space:][0-9]+[:space:]+[0-9]+");
+    regex Rating("=[0-9]+[[:space:]][0-9]+[[:space:]]+[0-9]+");
     regex Add("[A-Z][A-Za-z[:space:]]*[0-9]");
     regex Minus("-[A-Z][A-Za-z[:space:]]*[0-9]");
 
