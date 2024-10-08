@@ -15,6 +15,7 @@ using integer = int64_t;
 
 #define AMOUNT_OF_MEDALS 3
 
+#define dprint(x) cout << "D: " << x << "\n"
 
 // int używam dla 
 //      medali id
@@ -59,7 +60,9 @@ void update_medals(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>&
     // w tym momencie dzięki regex wiemy już, że line jest poprawny
     pair <string, id> medal = medal_data(line);
 
-    if (amount >= 0) Countries.insert(medal.first);
+    if (amount >= 0) { 
+        Countries.insert(medal.first);
+    }
 
     Medals[medal.second - 1][medal.first]++;
 }
@@ -74,7 +77,7 @@ vector<pair<string, integer>> Rating(array <integer, AMOUNT_OF_MEDALS>& Weights,
         position.first = country;
         position.second = 0;
         for (id i = 0; i < AMOUNT_OF_MEDALS; i++) {
-            position.first += Weights[i] * Medals[i][country];
+            position.second += Weights[i] * Medals[i][country];
         }
 
         rating.push_back(position);
@@ -111,7 +114,7 @@ int main() {
     string line;
     integer line_number = 1;
 
-    array <map<string, integer>, 3> Medals;
+    array <map<string, integer>, AMOUNT_OF_MEDALS> Medals;
     unordered_set <string> Countries;
 
     regex Rating("=[0-9]+[[:space:]][0-9]+[[:space:]]+[0-9]+");
