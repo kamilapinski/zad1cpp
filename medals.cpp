@@ -160,4 +160,5 @@ int main() {
         line_number++;
     }
 
+    return 0;
 }
