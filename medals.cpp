@@ -123,9 +123,16 @@ int main() {
     array<map<string, integer>, AMOUNT_OF_TYPES> Medals;
     unordered_set<string> Countries;
 
-    regex Rating("=[1-9][0-9]*[[:space:]][1-9][0-9]*[[:space:]][1-9][0-9]*");
-    regex Add("[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
-    regex Minus("-[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
+    string rating_syntax = "=";
+
+    for (int i = 1; i < AMOUNT_OF_TYPES - 1; i++) {
+        rating_syntax.append("[1-9][0-9]*[[:space:]]");
+    }
+    rating_syntax.append("[1-9][0-9]*");
+
+    regex Rating(rating_syntax);
+    regex Add("[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]](0|[1-9][0-9]*)");
+    regex Minus("-[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]](0|[1-9][0-9]*)");
 
     while (getline(cin, line)) {
 
