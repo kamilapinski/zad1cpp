@@ -10,7 +10,18 @@
 #include <regex>
 using namespace std;
 
+using id = int32_t;
+using integer = int64_t;
+
 #define AMOUNT_OF_MEDALS 3
+
+
+// int używam dla 
+//      medali id
+//      numeru linii integer
+//      liczby liter w stringu (trza zmienić)
+//      ilości medali integer
+//      wagi medali integer
 
 bool cmp(pair<int, string> p1, pair<int, string> p2) {
     if (p1.first == p2.first) {
@@ -61,31 +72,17 @@ bool is_medal_valid(pair <string, int>& medal) {
     else return true;
 }
 
-void add_medal(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
-    pair <string, int> para = medal_data(line);
+// sprawdzona i poprawna funkcja
+void update_medals(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries, integer amount) {
+    // w tym momencie dzięki regex wiemy już, że line jest poprawny
+    pair <string, id> medal = medal_data(line);
 
-    if (is_medal_valid(para) == false) {
-        print_error(line_number);
-        return;
-    }
+    if (amount > 0) Countries.insert(medal.first);
 
-    Countries.insert(para.first);
-
-    Medals[para.second - 1][para.first]++;
+    Medals[medal.second - 1][medal.first]++;
 }
 
-void remove_medal(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
-    pair <string, int> para = medal_data(line);
-
-    if (is_medal_valid(para) == false) {
-        print_error(line_number);
-        return;
-    }
-
-    Medals[para.second - 1][para.first]--;
-}
-
-vector<pair<int, string>> Rating(array <int, 3>& Weights, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
+vector<pair<int, string>> Rating(array <integer, 3>& Weights, array <map<string, integer>, 3>& Medals, unordered_set<string>& Countries) {
 
     vector<pair<int, string>> Rating;
 
@@ -106,9 +103,9 @@ vector<pair<int, string>> Rating(array <int, 3>& Weights, array <map<string, int
     return Rating;
 }
 
-void print_rating(string& line, int line_number, array <map<string, int>, 3>& Medals, unordered_set<string>& Countries) {
+void print_rating(string& line, integer line_number, array <map<string, integer>, 3>& Medals, unordered_set<string>& Countries) {
 
-    array <int, 3> Weights;
+    array <integer, 3> Weights;
 
     stringstream ss = stringstream(line);
 
@@ -132,14 +129,14 @@ void print_rating(string& line, int line_number, array <map<string, int>, 3>& Me
 int main() {
 
     string line;
-    int line_number = 1;
+    integer line_number = 1;
 
-    array <map<string, int>, 3> Medals;
+    array <map<string, integer>, 3> Medals;
     unordered_set <string> Countries;
 
     regex Rating("=[0-9]+[[:space:]][0-9]+[[:space:]]+[0-9]+");
-    regex Add("[A-Z][A-Za-z[:space:]]*[0-9]");
-    regex Minus("-[A-Z][A-Za-z[:space:]]*[0-9]");
+    regex Add("[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
+    regex Minus("-[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
 
     while (getline(cin, line)) {
 
@@ -149,10 +146,10 @@ int main() {
         }   
         else if (regex_match(line, Minus)) {
             line.erase(0, 1);
-            remove_medal(line, line_number, Medals, Countries);
+            update_medals(line, Medals, Countries, -1);
         }
         else if (regex_match(line, Add)){
-            add_medal(line, line_number, Medals, Countries);
+            update_medals(line, Medals, Countries, 1);
         }
         else {
             print_error(line_number);
@@ -162,6 +159,8 @@ int main() {
     }
 
 }
+
+// co jeżeli będziemy próbować odebrać medal którego nie ma?
 
 // std::variant<T1, T2, ...> 
 // nie można struct, union ani class
