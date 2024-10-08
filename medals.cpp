@@ -23,24 +23,26 @@ using integer = int64_t;
 //      ilości medali integer
 //      wagi medali integer
 
-bool cmp(pair<int, string> p1, pair<int, string> p2) {
-    if (p1.first == p2.first) {
-        if (p1.second.compare(p2.second) < 0)
+// SPRAWDZANIE NUMERU MEDALU
+
+bool cmp(pair<string, integer> p1, pair<string, integer> p2) {
+    if (p1.second == p2.second) {
+        if (p1.first.compare(p2.first) < 0)
             return true;
         else return false;
     }
-    else return p1.first > p2.first;
+    else return p1.second > p2.second;
 }
 
 void print_error(int line_number) {
     cerr << "ERROR " << line_number << '\n';
 }
 
-pair<string, int> medal_data(string& line) {
+pair<string, id> medal_data(string& line) {
     string country = line;
-    int medal = (int)(country.back() - '0');
+    id medal = (id)(country.back() - '0');
 
-    if (medal < 0 || medal > 3) medal = -1;
+    if (medal < 0 || medal > AMOUNT_OF_MEDALS) medal = -1;
 
     country.pop_back();
 
@@ -52,76 +54,54 @@ pair<string, int> medal_data(string& line) {
     return make_pair(country, medal);
 }
 
-bool is_country_name_valid(string& name) {
-    bool valid = true;
-    int letters = 0;
-
-    if (name[0] < 'A' || name[0] > 'Z') valid = false;
-
-    for (auto c : name) {
-        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) letters++;
-    }
-
-    if (letters < 2) valid = false;
-
-    return valid;
-}
-
-bool is_medal_valid(pair <string, int>& medal) {
-    if (medal.second == -1 || is_country_name_valid(medal.first) == false) return false;
-    else return true;
-}
-
 // sprawdzona i poprawna funkcja
 void update_medals(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries, integer amount) {
     // w tym momencie dzięki regex wiemy już, że line jest poprawny
     pair <string, id> medal = medal_data(line);
 
-    if (amount > 0) Countries.insert(medal.first);
+    if (amount >= 0) Countries.insert(medal.first);
 
     Medals[medal.second - 1][medal.first]++;
 }
 
-vector<pair<int, string>> Rating(array <integer, 3>& Weights, array <map<string, integer>, 3>& Medals, unordered_set<string>& Countries) {
+vector<pair<string, integer>> Rating(array <integer, AMOUNT_OF_MEDALS>& Weights, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries) {
 
-    vector<pair<int, string>> Rating;
+    vector<pair<string, integer>> rating;
 
     for (string country : Countries) {
-        pair<int, string> position;
+        pair<string, integer> position;
 
-        position.second = country;
-        position.first = 0;
-        for (int i = 0; i < AMOUNT_OF_MEDALS; i++) {
+        position.first = country;
+        position.second = 0;
+        for (id i = 0; i < AMOUNT_OF_MEDALS; i++) {
             position.first += Weights[i] * Medals[i][country];
         }
 
-        Rating.push_back(position);
+        rating.push_back(position);
     }
 
-    sort(Rating.begin(), Rating.end(), cmp);
+    sort(rating.begin(), rating.end(), cmp);
 
-    return Rating;
+    return rating;
 }
 
-void print_rating(string& line, integer line_number, array <map<string, integer>, 3>& Medals, unordered_set<string>& Countries) {
-
-    array <integer, 3> Weights;
+void print_rating(string& line, array <map<string, integer>, AMOUNT_OF_MEDALS>& Medals, unordered_set<string>& Countries) {
+    // teraz też już wiemy, że line jest poprawny dzięki regexowi
+    array <integer, AMOUNT_OF_MEDALS> Weights;
 
     stringstream ss = stringstream(line);
 
-    int w;
-    if (ss >> Weights[0] >> Weights[1] >> Weights[2] && !(ss >> w)) {
-        vector<pair<int, string>> rating = Rating(Weights, Medals, Countries);
-
-        int n = 0, last_score = -1;
-        for (pair<int, string> position : rating) {
-            if (last_score != position.first) n++;
-            cout << n << " " << position.second << "\n";
-            last_score = position.first;
-        }
+    for (id i = 0; i < AMOUNT_OF_MEDALS; i++) {
+        ss >> Weights[i];
     }
-    else {
-        print_error(line_number);
+    
+    vector<pair<string, integer>> rating = Rating(Weights, Medals, Countries);
+
+    integer n = 0, last_score = -1;
+    for (pair<string, integer> position : rating) {
+        if (last_score != position.second) n++;
+        cout << n << " " << position.first << "\n";
+        last_score = position.second;
     }
 
 }
@@ -142,7 +122,7 @@ int main() {
 
         if (regex_match(line, Rating)) {
             line.erase(0, 1);
-            print_rating(line, line_number, Medals, Countries);
+            print_rating(line, Medals, Countries);
         }   
         else if (regex_match(line, Minus)) {
             line.erase(0, 1);
