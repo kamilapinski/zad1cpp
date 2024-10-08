@@ -13,7 +13,6 @@ using type = int32_t;
 using integer = int64_t;
 
 #define AMOUNT_OF_TYPES 4
-#define dprint(x) cout << "D: " << x << "\n"
 #define MIN_WEIGHT 1
 #define MAX_WEIGHT 999999
 
@@ -37,7 +36,6 @@ bool is_medal_type_correct(const string& line) {
 }
 
 pair<string, type> medal_data(const string& line) {
-    // tutaj już zakładamy, że line jest poprawna
     string country = line;
     type medal = (type)(country.back() - '0');
 
@@ -51,9 +49,7 @@ pair<string, type> medal_data(const string& line) {
     return make_pair(country, medal);
 }
 
-// sprawdzona i poprawna funkcja
 bool update_medals(const string& line, array<map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries, integer amount) {
-    // w tym momencie dzięki regex wiemy już, że line jest poprawny
     pair <string, type> medal = medal_data(line);
 
     if (amount >= 0) { 
@@ -92,7 +88,6 @@ vector<pair<string, integer>> get_rating(array<integer, AMOUNT_OF_TYPES>& Weight
 }
 
 bool print_rating(const string& line, array<map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
-    // teraz też już wiemy, że line jest poprawny dzięki regexowi
     array<integer, AMOUNT_OF_TYPES> Weights;
 
     stringstream ss = stringstream(line);
@@ -128,7 +123,6 @@ int main() {
     array<map<string, integer>, AMOUNT_OF_TYPES> Medals;
     unordered_set<string> Countries;
 
-//same liczby trzeba poprawić bo mogą się zaczynać od 0 wg tej konwencji
     regex Rating("=[1-9][0-9]*[[:space:]][1-9][0-9]*[[:space:]][1-9][0-9]*");
     regex Add("[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
     regex Minus("-[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
@@ -160,11 +154,3 @@ int main() {
     }
 
 }
-
-// co jeżeli będziemy próbować odebrać medal którego nie ma?
-
-// std::variant<T1, T2, ...> 
-// nie można struct, union ani class
-
-// std::ranges::sort(v)
-// ranges - biblioteka, dużo rzeczy można robić
