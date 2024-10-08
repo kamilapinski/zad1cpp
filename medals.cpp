@@ -2,7 +2,6 @@
 #include <string>
 #include <sstream>
 #include <map>
-#include <tuple>
 #include <array>
 #include <unordered_set>
 #include <vector>
@@ -13,10 +12,10 @@ using namespace std;
 using type = int32_t;
 using integer = int64_t;
 
-#define AMOUNT_OF_TYPES 3
-
+#define AMOUNT_OF_TYPES 4
 #define dprint(x) cout << "D: " << x << "\n"
-
+#define MIN_WEIGHT 1
+#define MAX_WEIGHT 999999
 
 bool cmp(pair<string, integer> p1, pair<string, integer> p2) {
     if (p1.second == p2.second) {
@@ -28,20 +27,19 @@ bool cmp(pair<string, integer> p1, pair<string, integer> p2) {
 }
 
 void print_error(integer line_number) {
-    cerr << "ERROR " << line_number << '\n';
+    cerr << "ERROR " << line_number << "\n";
 }
 
 // poprawić, żeby było łatwo zmieniać
 bool is_medal_type_correct(const string& line) {
-    regex Type("[A-Za-z[:space:]]*[:space:][0-3]");
+    regex Type(".*[[:space:]][0-3]");
     return regex_match(line, Type);
 }
 
 pair<string, type> medal_data(const string& line) {
+    // tutaj już zakładamy, że line jest poprawna
     string country = line;
     type medal = (type)(country.back() - '0');
-
-    if (medal < 0 || medal > AMOUNT_OF_TYPES) medal = -1;
 
     country.pop_back();
 
@@ -54,7 +52,7 @@ pair<string, type> medal_data(const string& line) {
 }
 
 // sprawdzona i poprawna funkcja
-void update_medals(const string& line, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries, integer amount) {
+bool update_medals(const string& line, array<map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries, integer amount) {
     // w tym momencie dzięki regex wiemy już, że line jest poprawny
     pair <string, type> medal = medal_data(line);
 
@@ -62,10 +60,17 @@ void update_medals(const string& line, array <map<string, integer>, AMOUNT_OF_TY
         Countries.insert(medal.first);
     }
 
-    Medals[medal.second - 1][medal.first]++;
+    Medals[medal.second][medal.first] += amount;
+
+    if (Medals[medal.second][medal.first] < 0) {
+        Medals[medal.second][medal.first] -= amount;
+        return false;
+    }
+
+    return true;
 }
 
-vector<pair<string, integer>> get_rating(array <integer, AMOUNT_OF_TYPES>& Weights, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
+vector<pair<string, integer>> get_rating(array<integer, AMOUNT_OF_TYPES>& Weights, array<map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
 
     vector<pair<string, integer>> rating;
 
@@ -74,7 +79,7 @@ vector<pair<string, integer>> get_rating(array <integer, AMOUNT_OF_TYPES>& Weigh
 
         position.first = country;
         position.second = 0;
-        for (type i = 0; i < AMOUNT_OF_TYPES; i++) {
+        for (type i = 1; i < AMOUNT_OF_TYPES; i++) {
             position.second += Weights[i] * Medals[i][country];
         }
 
@@ -86,54 +91,66 @@ vector<pair<string, integer>> get_rating(array <integer, AMOUNT_OF_TYPES>& Weigh
     return rating;
 }
 
-void print_rating(const string& line, array <map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
+bool print_rating(const string& line, array<map<string, integer>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
     // teraz też już wiemy, że line jest poprawny dzięki regexowi
-    array <integer, AMOUNT_OF_TYPES> Weights;
+    array<integer, AMOUNT_OF_TYPES> Weights;
 
     stringstream ss = stringstream(line);
 
-    for (type i = 0; i < AMOUNT_OF_TYPES; i++) {
+    bool correct = true;
+
+    for (type i = 1; i < AMOUNT_OF_TYPES; i++) {
         ss >> Weights[i];
+        if (Weights[i] < MIN_WEIGHT || Weights[i] > MAX_WEIGHT)
+            correct = false;
     }
     
-    vector<pair<string, integer>> rating = get_rating(Weights, Medals, Countries);
+    if (correct) {
+        vector<pair<string, integer>> rating = get_rating(Weights, Medals, Countries);
 
-    integer n = 0, last_score = -1;
-    for (pair<string, integer> position : rating) {
-        if (last_score != position.second) n++;
-        cout << n << " " << position.first << "\n";
-        last_score = position.second;
+        integer n = 0, last_score = -1, place = 0;
+        for (pair<string, integer> position : rating) {
+            n++;
+            if (last_score != position.second)
+                place = n;
+            cout << place << ". " << position.first << "\n";
+            last_score = position.second;
+        }
     }
 
+    return correct;
 }
 
 int main() {
-
     string line;
     integer line_number = 1;
 
-    array <map<string, integer>, AMOUNT_OF_TYPES> Medals;
-    unordered_set <string> Countries;
+    array<map<string, integer>, AMOUNT_OF_TYPES> Medals;
+    unordered_set<string> Countries;
 
-    regex Rating("=[0-9]+[[:space:]][0-9]+[[:space:]]+[0-9]+");
+//same liczby trzeba poprawić bo mogą się zaczynać od 0 wg tej konwencji
+    regex Rating("=[1-9][0-9]*[[:space:]][1-9][0-9]*[[:space:]][1-9][0-9]*");
     regex Add("[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
     regex Minus("-[A-Z][A-Za-z[:space:]]*[A-Za-z][[:space:]][0-9]+");
 
     while (getline(cin, line)) {
 
-        if (!is_medal_type_correct(line)) {
+        if (regex_match(line, Rating)) {
+            line.erase(0, 1);
+            if (!print_rating(line, Medals, Countries))
+                print_error(line_number);
+        }   
+        else if (!is_medal_type_correct(line)) {
             print_error(line_number);
         }
-        else if (regex_match(line, Rating)) {
-            line.erase(0, 1);
-            print_rating(line, Medals, Countries);
-        }   
         else if (regex_match(line, Minus)) {
             line.erase(0, 1);
-            update_medals(line, Medals, Countries, -1);
+            if (!update_medals(line, Medals, Countries, -1))
+                print_error(line_number);
         }
         else if (regex_match(line, Add)){
-            update_medals(line, Medals, Countries, 1);
+            if (!update_medals(line, Medals, Countries, 1))
+                print_error(line_number);
         }
         else {
             print_error(line_number);
