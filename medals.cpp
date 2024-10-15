@@ -1,22 +1,26 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <map>
+#include <unordered_map>
 #include <array>
 #include <unordered_set>
 #include <vector>
 #include <algorithm>
 #include <regex>
+
 using namespace std;
 
 using type = int32_t;
 using size_type = size_t;
+using medals_type = array<unordered_map<string, size_type>, AMOUNT_OF_TYPES>;
+using pos_type = pair<string, size_type>;
+using countries_set = unordered_set<string>;
 
 constexpr int AMOUNT_OF_TYPES = 4;
 constexpr int MIN_WEIGHT = 1;
 constexpr int MAX_WEIGHT = 999999;
 
-bool cmp(pair<string, size_type>& p1, pair<string, size_type>& p2) {
+bool cmp(pos_type& p1, pos_type& p2) {
     if (p1.second == p2.second) {
         if (p1.first.compare(p2.first) < 0)
             return true;
@@ -58,7 +62,7 @@ pair<string, type> medal_data(const string& line) {
     return make_pair(country, medal);
 }
 
-bool update_medals(const string& line, array<map<string, size_type>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries, size_type amount) {
+bool update_medals(const string& line, medals_type& Medals, countries_set& Countries, size_type amount) {
     pair <string, type> medal = medal_data(line);
 
     if (amount >= 0) { 
@@ -75,12 +79,12 @@ bool update_medals(const string& line, array<map<string, size_type>, AMOUNT_OF_T
     return true;
 }
 
-vector<pair<string, size_type>> get_rating(array<size_type, AMOUNT_OF_TYPES>& Weights, array<map<string, size_type>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
+vector<pos_type> get_rating(array<size_type, AMOUNT_OF_TYPES>& Weights, medals_type& Medals, countries_set& Countries) {
 
-    vector<pair<string, size_type>> rating;
+    vector<pos_type> rating;
 
     for (string country : Countries) {
-        pair<string, size_type> position;
+        pos_type position;
 
         position.first = country;
         position.second = 0;
@@ -96,7 +100,7 @@ vector<pair<string, size_type>> get_rating(array<size_type, AMOUNT_OF_TYPES>& We
     return rating;
 }
 
-bool print_rating(const string& line, array<map<string, size_type>, AMOUNT_OF_TYPES>& Medals, unordered_set<string>& Countries) {
+bool print_rating(const string& line, medals_type& Medals, countries_set& Countries) {
     array<size_type, AMOUNT_OF_TYPES> Weights;
 
     stringstream ss = stringstream(line);
@@ -110,10 +114,10 @@ bool print_rating(const string& line, array<map<string, size_type>, AMOUNT_OF_TY
     }
     
     if (correct) {
-        vector<pair<string, size_type>> rating = get_rating(Weights, Medals, Countries);
+        vector<pos_type> rating = get_rating(Weights, Medals, Countries);
 
         size_type n = 0, last_score = -1, place = 0;
-        for (pair<string, size_type> position : rating) {
+        for (pos_type position : rating) {
             n++;
             if (last_score != position.second)
                 place = n;
@@ -129,8 +133,8 @@ int main() {
     string line;
     size_type line_number = 1;
 
-    array<map<string, size_type>, AMOUNT_OF_TYPES> Medals;
-    unordered_set<string> Countries;
+    medals_type Medals;
+    countries_set Countries;
 
     string rating_syntax = "=";
 
