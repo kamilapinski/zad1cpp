@@ -12,13 +12,16 @@ using namespace std;
 
 using type = int32_t;
 using size_type = size_t;
-using medals_type = array<unordered_map<string, size_type>, AMOUNT_OF_TYPES>;
-using pos_type = pair<string, size_type>;
-using countries_set = unordered_set<string>;
+using integer = int64_t;
 
-constexpr int AMOUNT_OF_TYPES = 4;
-constexpr int MIN_WEIGHT = 1;
-constexpr int MAX_WEIGHT = 999999;
+constexpr type AMOUNT_OF_TYPES = 4;
+constexpr size_type SIZE_OF_MAX_TYPE = 1;
+constexpr integer MIN_WEIGHT = 1;
+constexpr integer MAX_WEIGHT = 999999;
+
+using medals_cont = array<unordered_map<string, integer>, AMOUNT_OF_TYPES>;
+using pos_type = pair<string, integer>;
+using countries_set = unordered_set<string>;
 
 bool cmp(pos_type& p1, pos_type& p2) {
     if (p1.second == p2.second) {
@@ -29,7 +32,7 @@ bool cmp(pos_type& p1, pos_type& p2) {
     else return p1.second > p2.second;
 }
 
-void print_error(size_type line_number) {
+void print_error(integer line_number) {
     cerr << "ERROR " << line_number << "\n";
 }
 
@@ -37,12 +40,21 @@ bool is_medal_type_correct(const string& line) {
 
     stringstream ss(line);
 
-    string word, good_word;
+    string word, last_word;
     while (ss >> word) {
-        good_word = word;
+        last_word = word;
     }
     
-    type medal_type = stoi(good_word);
+    if (SIZE_OF_MAX_TYPE < last_word.size()) return false;
+
+    type medal_type = 0;
+
+    for (auto c : last_word) {
+        if (c < '0' || c > '9') return false;
+        medal_type += (type)(c - '0');
+        medal_type *= 10;
+    }
+    medal_type /= 10;
     
     if (medal_type >= 0 && medal_type < AMOUNT_OF_TYPES) return true;
     else return false;
@@ -62,24 +74,23 @@ pair<string, type> medal_data(const string& line) {
     return make_pair(country, medal);
 }
 
-bool update_medals(const string& line, medals_type& Medals, countries_set& Countries, size_type amount) {
+bool update_medals(const string& line, medals_cont& Medals, countries_set& Countries, integer amount) {
     pair <string, type> medal = medal_data(line);
 
     if (amount >= 0) { 
         Countries.insert(medal.first);
     }
 
-    Medals[medal.second][medal.first] += amount;
-
-    if (Medals[medal.second][medal.first] < 0) {
-        Medals[medal.second][medal.first] -= amount;
+    if (Medals[medal.second][medal.first] == 0 && amount < 0) {
         return false;
     }
+
+    Medals[medal.second][medal.first] += amount;
 
     return true;
 }
 
-vector<pos_type> get_rating(array<size_type, AMOUNT_OF_TYPES>& Weights, medals_type& Medals, countries_set& Countries) {
+vector<pos_type> get_rating(const array<integer, AMOUNT_OF_TYPES>& Weights, medals_cont& Medals, countries_set& Countries) {
 
     vector<pos_type> rating;
 
@@ -100,8 +111,8 @@ vector<pos_type> get_rating(array<size_type, AMOUNT_OF_TYPES>& Weights, medals_t
     return rating;
 }
 
-bool print_rating(const string& line, medals_type& Medals, countries_set& Countries) {
-    array<size_type, AMOUNT_OF_TYPES> Weights;
+bool print_rating(const string& line, medals_cont& Medals, countries_set& Countries) {
+    array<integer, AMOUNT_OF_TYPES> Weights;
 
     stringstream ss = stringstream(line);
 
@@ -116,7 +127,7 @@ bool print_rating(const string& line, medals_type& Medals, countries_set& Countr
     if (correct) {
         vector<pos_type> rating = get_rating(Weights, Medals, Countries);
 
-        size_type n = 0, last_score = -1, place = 0;
+        integer n = 0, last_score = -1, place = 0;
         for (pos_type position : rating) {
             n++;
             if (last_score != position.second)
@@ -131,14 +142,14 @@ bool print_rating(const string& line, medals_type& Medals, countries_set& Countr
 
 int main() {
     string line;
-    size_type line_number = 1;
+    integer line_number = 1;
 
-    medals_type Medals;
+    medals_cont Medals;
     countries_set Countries;
 
     string rating_syntax = "=";
 
-    for (int i = 1; i < AMOUNT_OF_TYPES - 1; i++) {
+    for (type i = 1; i < AMOUNT_OF_TYPES - 1; i++) {
         rating_syntax.append("[1-9][0-9]*[[:space:]]");
     }
     rating_syntax.append("[1-9][0-9]*");
@@ -153,18 +164,21 @@ int main() {
             line.erase(0, 1);
             if (!print_rating(line, Medals, Countries))
                 print_error(line_number);
-        }   
-        else if (!is_medal_type_correct(line)) {
-            print_error(line_number);
         }
         else if (regex_match(line, Minus)) {
             line.erase(0, 1);
-            if (!update_medals(line, Medals, Countries, -1))
+            if (!is_medal_type_correct(line)) {
+                print_error(line_number);   
+            }
+            else if (!update_medals(line, Medals, Countries, -1))
                 print_error(line_number);
         }
         else if (regex_match(line, Add)){
-            if (!update_medals(line, Medals, Countries, 1))
-                print_error(line_number);
+            if (!is_medal_type_correct(line)) {
+                print_error(line_number);   
+            }
+            else if (!update_medals(line, Medals, Countries, 1))
+                    print_error(line_number);
         }
         else {
             print_error(line_number);
