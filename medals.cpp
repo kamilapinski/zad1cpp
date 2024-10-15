@@ -32,7 +32,7 @@ bool cmp(pos_type& p1, pos_type& p2) {
     else return p1.second > p2.second;
 }
 
-void print_error(integer line_number) {
+void print_error(size_type line_number) {
     cerr << "ERROR " << line_number << "\n";
 }
 
@@ -142,7 +142,7 @@ bool print_rating(const string& line, medals_cont& Medals, countries_set& Countr
 
 int main() {
     string line;
-    integer line_number = 1;
+    size_type line_number = 1;
 
     medals_cont Medals;
     countries_set Countries;
